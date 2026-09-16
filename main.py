@@ -83,5 +83,5 @@ def main() -> None:
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 # 🎯 FIXED: Correct Python main trigger execution blocks
-if _name_ == "_main_":
+if name == "main":
     main()
