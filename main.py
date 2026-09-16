@@ -9,7 +9,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# 🎯 FIXED: Assigned your token securely to the variable
+# Your verified Telegram token assigned cleanly to the variable
 BOT_TOKEN = "8975404846:AAF-j5eOKDP8qruIBUh99mE3878lukqvQs4"
 FARM_START_DATE = datetime(2026, 10, 1)
 
@@ -68,8 +68,10 @@ async def evening_alert(context: ContextTypes.DEFAULT_TYPE) -> None:
         await context.bot.send_message(chat_id=chat_id, text="🌙 *EVENING FEEDING ALERT (17:00 PM)*\nAdminister schedule routines.")
 
 def main() -> None:
+    # Run dummy web server in a side thread so Render detects a port connection
     threading.Thread(target=run_health_server, daemon=True).start()
 
+    # Build and trigger Telegram bot core polling loop
     application = Application.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("schedule", show_schedule))
@@ -81,7 +83,5 @@ def main() -> None:
     job_queue.run_daily(evening_alert, time=time(17, 0, 0))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
-
-# 🎯 FIXED: Correct Python main trigger execution blocks
-if name == "main":
-    main()
+    # 🎯 DIRECT INVOCATION: Bypassed the faulty string check completely
+main()
