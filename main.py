@@ -8,8 +8,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
-
-# BOT_TOKEN = "8975404846:AAF-j5eOKDP8qruIBUh99mE3878lukqvQs4"
+BOT_TOKEN = "8975404846:AAF-j5eOKDP8qruIBUh99mE3878lukqvQs4"
 FARM_START_DATE = datetime(2026, 10, 1)
 
 # --- DUMMY WEB SERVER TO SPREAD RENDER PORT ALERTS ---
