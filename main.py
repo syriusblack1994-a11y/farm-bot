@@ -81,7 +81,8 @@ def main() -> None:
     job_queue.run_daily(morning_alert, time=time(6, 0, 0))
     job_queue.run_daily(noon_alert, time=time(12, 0, 0))
     job_queue.run_daily(evening_alert, time=time(17, 0, 0))
-
+    # Fixed formatting and indentation below:
     application.run_polling(allowed_updates=Update.ALL_TYPES)
-    # 🎯 DIRECT INVOCATION: Bypassed the faulty string check completely
+
+# Run the program directly
 main()
