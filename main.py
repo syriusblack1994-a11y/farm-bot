@@ -132,6 +132,6 @@ async def main() -> None:
         while True:
             await asyncio.sleep(3600)
 
-if name == "__main__":
+if __name__ == "__main__":
     # Запуск через основной event loop asyncio
     asyncio.run(main())
