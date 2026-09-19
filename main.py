@@ -114,5 +114,6 @@ def main() -> None:
     job_queue.run_daily(evening_alert, time=time(17, 0, 0)) 
 
     application.run_polling(allowed_updates=Update.ALL_TYPES) 
+
 if name == "main": 
     main()
