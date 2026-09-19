@@ -1,21 +1,22 @@
 import logging 
 import os 
 import json
-from datetime import datetime, time 
+import asyncio
+from datetime import datetime, time, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer 
 import threading 
 from telegram import Update 
 from telegram.ext import Application, CommandHandler, ContextTypes 
 
-# Enable logging
+# Включаем логирование
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO) 
 
-# Configuration
+# Конфигурация
 BOT_TOKEN = "8975404846:AAF-j5eOKDP8qruIBUh99mE3878lukqvQs4" 
 FARM_START_DATE = datetime(2026, 10, 1) 
 DB_FILE = "chats.json"
 
-# --- PERSISTENT STORAGE SYSTEM ---
+# --- СИСТЕМА ХРАНЕНИЯ ДАННЫХ ---
 def load_chats():
     if os.path.exists(DB_FILE):
         try:
@@ -28,10 +29,13 @@ def load_chats():
 def save_chat(chat_id):
     chats = load_chats()
     chats.add(chat_id)
-    with open(DB_FILE, "w") as f:
-        json.dump(list(chats), f)
+    try:
+        with open(DB_FILE, "w") as f:
+            json.dump(list(chats), f)
+    except Exception as e:
+        logging.error(f"Failed to save chat to database: {e}")
 
-# --- DUMMY WEB SERVER FOR RENDER --- 
+# --- ВЕБ-СЕРВЕР ДЛЯ RENDER (HEALTH CHECK) --- 
 class HealthCheckHandler(BaseHTTPRequestHandler): 
     def do_GET(self): 
         self.send_response(200) 
@@ -42,9 +46,10 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
 def run_health_server(): 
     port = int(os.environ.get("PORT", 10000)) 
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler) 
+    logging.info(f"Starting health check server on port {port}")
     server.serve_forever() 
 
-# --- BOT FUNCTIONALITY --- 
+# --- ФУНКЦИОНАЛ БОТА --- 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
     chat_id = update.effective_chat.id 
     save_chat(chat_id)
@@ -75,7 +80,7 @@ async def show_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 async def show_vet(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None: 
     await update.message.reply_text("🛡 *Vaccines:* Day 1: Colostrum. Month 1: Anthrax. Month 3: Yashsil #1. Month 6: Deworming.", parse_mode="Markdown") 
 
-# --- TIMED ALERTS ---
+# --- ПЛАНИРОВЩИК УВЕДОМЛЕНИЙ ---
 async def morning_alert(context: ContextTypes.DEFAULT_TYPE) -> None: 
     chats = load_chats()
     for chat_id in chats: 
@@ -99,21 +104,34 @@ async def evening_alert(context: ContextTypes.DEFAULT_TYPE) -> None:
         except Exception as e:
             logging.error(f"Failed to send evening alert to {chat_id}: {e}")
 
-def main() -> None: 
+async def main() -> None: 
+    # Запуск веб-сервера в отдельном потоке
     threading.Thread(target=run_health_server, daemon=True).start() 
 
+    # Инициализация приложения бота
     application = Application.builder().token(BOT_TOKEN).build() 
 
     application.add_handler(CommandHandler("start", start)) 
     application.add_handler(CommandHandler("schedule", show_schedule)) 
     application.add_handler(CommandHandler("vet", show_vet)) 
 
+    # Настройка JobQueue
     job_queue = application.job_queue 
-    job_queue.run_daily(morning_alert, time=time(6, 0, 0)) 
-    job_queue.run_daily(noon_alert, time=time(12, 0, 0)) 
-    job_queue.run_daily(evening_alert, time=time(17, 0, 0)) 
+    job_queue.run_daily(morning_alert, time=time(6, 0, 0, tzinfo=timezone.utc)) 
+    job_queue.run_daily(noon_alert, time=time(12, 0, 0, tzinfo=timezone.utc)) 
+    job_queue.run_daily(evening_alert, time=time(17, 0, 0, tzinfo=timezone.utc)) 
 
-    application.run_polling(allowed_updates=Update.ALL_TYPES) 
+    # Корректный асинхронный запуск и инициализация
+    async with application:
+        await application.initialize()
+        await application.start()
+        logging.info("Bot started successfully. Listening for updates...")
+        await application.updater.start_polling(allowed_updates=Update.ALL_TYPES)
+        
+        # Поддерживаем бесконечный цикл работы, пока приложение активно
+        while True:
+            await asyncio.sleep(3600)
 
-# Executed directly to completely avoid trailing-edge syntax checks
-main()
+if name == "main":
+    # Запуск через основной event loop asyncio
+    asyncio.run(main())
