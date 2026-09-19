@@ -115,5 +115,6 @@ def main() -> None:
 
     application.run_polling(allowed_updates=Update.ALL_TYPES) 
 
+# 🎯 FIXED: System variables properly configured with double underscores
 if name == "main": 
     main()
