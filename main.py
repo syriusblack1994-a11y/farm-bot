@@ -91,7 +91,7 @@ async def noon_alert(context: ContextTypes.DEFAULT_TYPE) -> None:
             await context.bot.send_message(chat_id=chat_id, text="🌤 *MIDDAY CHECK (12:00 PM)*\nClean water and check salt-lick block.", parse_mode="Markdown") 
         except Exception as e:
             logging.error(f"Failed to send noon alert to {chat_id}: {e}")
-            async def evening_alert(context: ContextTypes.DEFAULT_TYPE) -> None: 
+async def evening_alert(context: ContextTypes.DEFAULT_TYPE) -> None: 
     chats = load_chats()
     for chat_id in chats: 
         try:
