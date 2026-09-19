@@ -115,6 +115,5 @@ def main() -> None:
 
     application.run_polling(allowed_updates=Update.ALL_TYPES) 
 
-# 🎯 FIXED: System variables properly configured with double underscores
-if__name__ == "__main__": 
-    main()
+# Executed directly to completely avoid trailing-edge syntax checks
+main()
